@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\AuthRequest;
 use App\Models\user;
+use Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +30,7 @@ class AuthController extends Controller
 
     public function login(Request $request) {
         $credentials = $request->validate([
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email',
             'password' => 'required'
         ]);
 
@@ -38,18 +38,22 @@ class AuthController extends Controller
             $user = Auth::user();
             $token = $user->createToken('token')->plainTextToken;
             $cookie = cookie('cookie_token', $token, 60 * 24);
-            return response(["token"=>$token], Response::HTTP_OK)->withoutCookie($cookie);
+            return response(["token"=>$token], Response::HTTP_OK)->withCookie($cookie);
         } else {
-            return response(Response::HTTP_UNAUTHORIZED);
+            return response(["message" => "Credenciales invalidas"],Response::HTTP_UNAUTHORIZED);
         }
     }
 
     public function userProfile(Request $request) {
-
+        return response()->json([
+            "message" => "userProfile OK",
+            "userdata" => auth()->user()
+        ], Response::HTTP_OK);
     }
 
     public function logout() {
-
+        $cookie = Cookie::forget('cookie_token');
+        return response(["message" => "Cierre de sesión OK"], Response::HTTP_OK)->withCookie($cookie);
     }
 
     public function allUsers() {
